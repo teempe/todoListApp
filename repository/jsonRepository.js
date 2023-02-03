@@ -20,7 +20,7 @@ class JsonRepository {
         tasks.push({id, description, isFinished});
         await this.#writeData(tasks);
 
-        return true;
+        return {id, description, isFinished};
     }
 
     async deleteTask(id) {
