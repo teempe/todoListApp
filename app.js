@@ -17,7 +17,14 @@ app.get('/', async (req, res) => {
 
     const tasks = await repo.getAll();
     console.log(tasks);
-    res.render('todolist', { tasks });
+    res.render('todolist', { 
+        tasks,
+        filter: {
+            all: true,
+            active: false,
+            completed: false,
+        }
+     });
 });
 
 app.get('/:filter', async (req, res) => {
@@ -27,11 +34,25 @@ app.get('/:filter', async (req, res) => {
     switch (filter) {
         case 'active':
             const activeTasks = tasks.filter(task => !task.isFinished);
-            res.render('todolist', { tasks: activeTasks })
+            res.render('todolist', { 
+                tasks: activeTasks,
+                filter: {
+                    all: false,
+                    active: true,
+                    completed: false,
+                }
+             })
             break;
         case 'completed':
             const completedTasks = tasks.filter(task => task.isFinished);
-            res.render('todolist', { tasks: completedTasks })
+            res.render('todolist', { 
+                tasks: completedTasks,
+                filter: {
+                    all: false,
+                    active: false,
+                    completed: true,
+                }
+             })
             break;
     } 
 });

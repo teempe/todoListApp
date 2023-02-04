@@ -31,15 +31,35 @@
     <span class="todo-count"><strong>0</strong> item left</span>
     <!-- Remove this if you don't implement routing -->
     <ul class="filters">
-        <li>
-            <a class="selected" href="/">All</a>
-        </li>
-        <li>
-            <a href="/active">Active</a>
-        </li>
-        <li>
-            <a href="/completed">Completed</a>
-        </li>
+        {{#with filter}}
+            <li>
+                {{#if all}}
+                    <a class="selected" href="/">All</a>
+                {{else}}
+                    <a href="/">All</a>
+                {{/if}}
+            </li>
+            <li>
+                {{#if active}}
+                    <a class="selected" href="/active">Active</a>
+                {{else}}
+                    <a href="/active">Active</a>
+                {{/if}}
+            </li>
+            <li>
+                {{#if completed}}
+                    <a class="selected" href="/completed">Completed</a>
+                {{else}}
+                    <a href="/completed">Completed</a>
+                {{/if}}
+            </li>
+            {{!-- <li>
+                <a href="/active">Active</a>
+            </li>
+            <li>
+                <a href="/completed">Completed</a>
+            </li> --}}
+        {{/with}}
     </ul>
     <!-- Hidden if no completed items are left ↓ -->
     <button class="clear-completed">Clear completed</button>

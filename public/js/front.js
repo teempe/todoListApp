@@ -121,23 +121,23 @@ const deleteTask = async event => {
     }
 }
 
-const filterAllTasks = async event => {
-    event.target.classList.add('selected');
-    filterActive.classList.remove('selected');
-    filterCompleted.classList.remove('selected');
-}
+// const filterAllTasks = async event => {
+//     event.target.classList.add('selected');
+//     filterActive.classList.remove('selected');
+//     filterCompleted.classList.remove('selected');
+// }
 
-const filterActiveTasks = async event => {
-    event.target.classList.add('selected');
-    filterAll.classList.remove('selected');
-    filterCompleted.classList.remove('selected');
-}
+// const filterActiveTasks = async event => {
+//     event.target.classList.add('selected');
+//     filterAll.classList.remove('selected');
+//     filterCompleted.classList.remove('selected');
+// }
 
-const filterCompletedTasks = async event => {
-    event.target.classList.add('selected');
-    filterAll.classList.remove('selected');
-    filterActive.classList.remove('selected');
-}
+// const filterCompletedTasks = async event => {
+//     event.target.classList.add('selected');
+//     filterAll.classList.remove('selected');
+//     filterActive.classList.remove('selected');
+// }
 
 const deleteSelectedTasks = async event => {
     const isCompleted = task => task.classList.contains('completed');
@@ -157,9 +157,9 @@ checkboxes.forEach(checkbox => checkbox.addEventListener('click', toggleTaskComp
 descriptionLabels.forEach(label => label.addEventListener('click', editTaskDescription));
 delButtons.forEach(btn => btn.addEventListener('click', deleteTask));
 
-filterAll.addEventListener('click', filterAll);
-filterActive.addEventListener('click', filterActiveTasks);
-filterCompleted.addEventListener('click', filterCompletedTasks);
+// filterAll.addEventListener('click', filterAll);
+// filterActive.addEventListener('click', filterActiveTasks);
+// filterCompleted.addEventListener('click', filterCompletedTasks);
 
 selectAll.addEventListener('click', toggleSelection);
 
