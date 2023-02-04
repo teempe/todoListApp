@@ -5,6 +5,8 @@ const delButtons = document.querySelectorAll('button[data-id].destroy');
 const filterActive = document.querySelector('a[href="/active"]');
 const filterCompleted = document.querySelector('a[href="/completed"]');
 const filterAll = document.querySelector('a[href="/"]');
+const selectAll = document.querySelector('label[for="toggle-all"]');
+const clearButton = document.querySelector('button.clear-completed');
 
 
 const fetchData = async (data, method, path) => {
@@ -50,7 +52,28 @@ const toggleTaskCompleted = async event => {
     await fetchData(data, 'PUT', '/');
 }
 
-const selectAllTasks = async (event) => {} //TODO: implement
+const toggleSelection = async event => {
+    const allTasks = [...document.querySelectorAll('li[data-id]')];
+
+    const isCompleted = task => task.classList.contains('completed');
+    const isNotCompleted = task => !task.classList.contains('completed');
+    const checkCompleted = (task, isChecked) => {
+        const taskId = task.attributes['data-id'].value;
+        const checkbox = document.querySelector(`input[data-id="${taskId}"].toggle`);
+        checkbox.dispatchEvent(new Event('click'));
+        checkbox.checked = isChecked;
+    }
+
+    if (allTasks.every(isCompleted)) {
+        for (task of allTasks) {
+            checkCompleted(task, false);
+        }
+    } else {
+        for (task of allTasks.filter(isNotCompleted)) {
+            checkCompleted(task, true);
+        }
+    }
+}
 
 const editTaskDescription = async event => {
     const targetNode = event.target;
@@ -91,22 +114,31 @@ const filterAllTasks = async event => {
     event.target.classList.add('selected');
     filterActive.classList.remove('selected');
     filterCompleted.classList.remove('selected');
-}  //TODO: implement
+}
 
 const filterActiveTasks = async event => {
     event.target.classList.add('selected');
     filterAll.classList.remove('selected');
     filterCompleted.classList.remove('selected');
-    
 }
 
 const filterCompletedTasks = async event => {
     event.target.classList.add('selected');
     filterAll.classList.remove('selected');
     filterActive.classList.remove('selected');
-}    //TODO: implement
+}
 
-const deleteSelectedTasks = async (event) => {} //TODO: implement
+const deleteSelectedTasks = async event => {
+    const isCompleted = task => task.classList.contains('completed');
+
+    [ ...document.querySelectorAll('li[data-id]') ]
+        .filter(isCompleted)
+        .forEach(task => {
+            const taskId = task.attributes['data-id'].value;
+            const delBtn = document.querySelector(`button[data-id="${taskId}"].destroy`);
+            delBtn.dispatchEvent(new Event('click')); 
+        });
+}
 
 
 inputNewTask.addEventListener('keypress', addNewTask);
@@ -114,45 +146,10 @@ checkboxes.forEach(checkbox => checkbox.addEventListener('click', toggleTaskComp
 descriptionLabels.forEach(label => label.addEventListener('click', editTaskDescription));
 delButtons.forEach(btn => btn.addEventListener('click', deleteTask));
 
+filterAll.addEventListener('click', filterAll);
 filterActive.addEventListener('click', filterActiveTasks);
+filterCompleted.addEventListener('click', filterCompletedTasks);
 
-///////////////////////////////////////////////////////////////////////////////
-// labels.forEach(label => label.addEventListener('click', event => {
-//     const targetNode = event.target;
-//     const taskId = targetNode.attributes['data-id'].value;
-//     const inputNode = document.querySelector(`input[data-id="${taskId}"].edit`);
-//     const parentNode = document.querySelector(`li[data-id="${taskId}"]`);
+selectAll.addEventListener('click', toggleSelection);
 
-//     parentNode.classList.add('editing');
-//     // inputNode.setAttribute('value', targetNode.innerText);
-//     inputNode.value = targetNode.innerText;
-
-//     inputNode.addEventListener('keypress', async event => {
-//         if (event.key === 'Enter') {
-//             targetNode.innerText = inputNode.value;
-//             // inputNode.removeAttribute('value');
-//             parentNode.classList.remove('editing');
-
-//             // await fetch('/', {
-//             //     method: 'PUT',
-//             //     body: JSON.stringify({
-//             //         id: taskId,
-//             //         description: targetNode.innerText,
-//             //         isFinished: parentNode.classList.contains('completed'),
-//             //     }),
-//             //     headers: {
-//             //         'Content-Type': 'application/json',
-//             //     }
-//             // });
-//             if (inputNode.value !== '') {
-//                 const data = {
-//                     id: taskId,
-//                     description: inputNode.value,
-//                     isFinished: parentNode.classList.contains('completed'),
-//                 }
-//                 await fetchData(data, 'PUT', '/');
-//                 inputNode.value = '';
-//             }
-//         }
-//     });   
-// }));
+clearButton.addEventListener('click', deleteSelectedTasks);

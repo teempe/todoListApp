@@ -20,6 +20,22 @@ app.get('/', async (req, res) => {
     res.render('todolist', { tasks });
 });
 
+app.get('/:filter', async (req, res) => {
+    const { filter } = req.params;
+    const tasks = await repo.getAll();
+
+    switch (filter) {
+        case 'active':
+            const activeTasks = tasks.filter(task => !task.isFinished);
+            res.render('todolist', { tasks: activeTasks })
+            break;
+        case 'completed':
+            const completedTasks = tasks.filter(task => task.isFinished);
+            res.render('todolist', { tasks: completedTasks })
+            break;
+    } 
+});
+
 app.post('/', async (req, res) => {
     console.log('post / route');
     console.log('ADD', req.body);
