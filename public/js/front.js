@@ -2,15 +2,13 @@ const inputNewTask = document.querySelector('input.new-todo');
 const checkboxes = document.querySelectorAll('input[data-id].toggle');
 const descriptionLabels = document.querySelectorAll('label[data-id');
 const delButtons = document.querySelectorAll('button[data-id].destroy');
-const filterActive = document.querySelector('a[href="/active"]');
-const filterCompleted = document.querySelector('a[href="/completed"]');
-const filterAll = document.querySelector('a[href="/"]');
 const selectAll = document.querySelector('label[for="toggle-all"]');
 const clearButton = document.querySelector('button.clear-completed');
 const counter = document.querySelector('span.todo-count');
 
 
 const countItemsLeft = () => {
+    // number of tasks marked as completed
     const notCompletedItems = [ ...document.querySelectorAll('li[data-id]') ]
             .filter(task => !task.classList.contains('completed'))
             .length;
@@ -45,9 +43,9 @@ const addNewTask = async event => {
             const data = {
                 description: inputNewTask.value,
             }
-            inputNewTask.value = '';
+            inputNewTask.value = '';    // empty value attribute to avoid fetch every time Enter is pressed
             await fetchData(data, 'POST', '/#');
-            window.location.reload();
+            window.location.reload();   // reload view to get current list of tasks from BE
         }
     }
 }
@@ -60,6 +58,7 @@ const toggleTaskCompleted = async event => {
 
     const data = getTaskDetails(taskId);
     await fetchData(data, 'PUT', '/');
+
     countItemsLeft();
 }
 
@@ -68,18 +67,21 @@ const toggleSelection = async event => {
 
     const isCompleted = task => task.classList.contains('completed');
     const isNotCompleted = task => !task.classList.contains('completed');
+    // switch checked attribute for checkbox associated with task list element
     const checkCompleted = (task, isChecked) => {
         const taskId = task.attributes['data-id'].value;
         const checkbox = document.querySelector(`input[data-id="${taskId}"].toggle`);
-        checkbox.dispatchEvent(new Event('click'));
-        checkbox.checked = isChecked;
+        checkbox.dispatchEvent(new Event('click')); // fire click event on checkbox (callback will handle marking as completed/active)
+        checkbox.checked = isChecked;   // make sure checked poperty is appropriately set
     }
 
     if (allTasks.every(isCompleted)) {
+        // if all items are marked as completed, unmark all of them
         for (task of allTasks) {
             checkCompleted(task, false);
         }
     } else {
+        // if only some are marked as completeted, filter out these which are not and check them
         for (task of allTasks.filter(isNotCompleted)) {
             checkCompleted(task, true);
         }
@@ -103,7 +105,7 @@ const editTaskDescription = async event => {
             if (inputNode.value !== '') {
                 const data = getTaskDetails(taskId);
                 await fetchData(data, 'PUT', '/');
-                inputNode.value = '';
+                inputNode.value = '';   // empty value attribute to avoid fetch every time Enter is pressed
             }
         }
     }); 
@@ -121,33 +123,15 @@ const deleteTask = async event => {
     }
 }
 
-// const filterAllTasks = async event => {
-//     event.target.classList.add('selected');
-//     filterActive.classList.remove('selected');
-//     filterCompleted.classList.remove('selected');
-// }
-
-// const filterActiveTasks = async event => {
-//     event.target.classList.add('selected');
-//     filterAll.classList.remove('selected');
-//     filterCompleted.classList.remove('selected');
-// }
-
-// const filterCompletedTasks = async event => {
-//     event.target.classList.add('selected');
-//     filterAll.classList.remove('selected');
-//     filterActive.classList.remove('selected');
-// }
-
 const deleteSelectedTasks = async event => {
     const isCompleted = task => task.classList.contains('completed');
 
     [ ...document.querySelectorAll('li[data-id]') ]
-        .filter(isCompleted)
+        .filter(isCompleted)    // filter out completed tasks
         .forEach(task => {
-            const taskId = task.attributes['data-id'].value;
-            const delBtn = document.querySelector(`button[data-id="${taskId}"].destroy`);
-            delBtn.dispatchEvent(new Event('click')); 
+            const taskId = task.attributes['data-id'].value;    // get id of task
+            const delBtn = document.querySelector(`button[data-id="${taskId}"].destroy`);   // find assiociated del button
+            delBtn.dispatchEvent(new Event('click'));   // fire click event (callback will delete task)
         });
 }
 
@@ -156,10 +140,6 @@ inputNewTask.addEventListener('keypress', addNewTask);
 checkboxes.forEach(checkbox => checkbox.addEventListener('click', toggleTaskCompleted));
 descriptionLabels.forEach(label => label.addEventListener('click', editTaskDescription));
 delButtons.forEach(btn => btn.addEventListener('click', deleteTask));
-
-// filterAll.addEventListener('click', filterAll);
-// filterActive.addEventListener('click', filterActiveTasks);
-// filterCompleted.addEventListener('click', filterCompletedTasks);
 
 selectAll.addEventListener('click', toggleSelection);
 
