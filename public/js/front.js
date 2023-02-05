@@ -6,7 +6,9 @@ const selectAll = document.querySelector('label[for="toggle-all"]');
 const clearButton = document.querySelector('button.clear-completed');
 const counter = document.querySelector('span.todo-count');
 
-
+/**
+ * Counts items left (uncompleted) and presents result on page.
+ */
 const countItemsLeft = () => {
     // number of tasks marked as completed
     const notCompletedItems = [ ...document.querySelectorAll('li[data-id]') ]
@@ -17,6 +19,13 @@ const countItemsLeft = () => {
     counter.innerHTML = message;
 }
 
+/**
+ * Fetches data in JSON format to BE with given method to given path.
+ * @param {Object} data - Object containing data to send.
+ * @param {String} method - HTTP method ex. 'GET', 'POST'...
+ * @param {String} path - path 
+ * @returns {Object} - response
+ */
 const fetchData = async (data, method, path) => {
     const response = await fetch(path, {
         method: method,
@@ -29,6 +38,11 @@ const fetchData = async (data, method, path) => {
     return response;
 };
 
+/**
+ * Gather task data: id, decription, isFinished
+ * @param {String} taskId 
+ * @returns {Object} - task details
+ */
 const getTaskDetails = taskId => {
     return {
         id: taskId,
@@ -37,6 +51,27 @@ const getTaskDetails = taskId => {
     }
 }
 
+/**
+ * Returns all html elements related to task with given id.
+ * @param {String} taskId 
+ * @returns {Object} 
+ */
+const getTaskElements = taskId => {
+    return {
+        listElement: document.querySelector(`li[data-id="${taskId}"]`),
+        completedCheck: document.querySelector(`input[data-id="${taskId}"].toggle`),
+        descriptionLabel: document.querySelector(`label[data-id="${taskId}"]`),
+        editInput: document.querySelector(`input[data-id="${taskId}"].edit`),
+        deleteButton: document.querySelectorAll(`button[data-id="${taskId}"].destroy`),
+    }
+}
+
+/**
+ * Adds new task.
+ * Fetches data to BE to store.
+ * If witing data finish with success, will relaod page to show current tasks list.
+ * @param {*} event 
+ */
 const addNewTask = async event => {
     if (event.key === 'Enter') {
         if (event.target.value !== '') {
@@ -44,24 +79,36 @@ const addNewTask = async event => {
                 description: inputNewTask.value,
             }
             inputNewTask.value = '';    // empty value attribute to avoid fetch every time Enter is pressed
-            await fetchData(data, 'POST', '/');
-            window.location.reload();   // reload view to get current list of tasks from BE
+            const res = await fetchData(data, 'POST', '/');
+            if (res) {
+                window.location.reload();
+            }
         }
     }
 }
 
-const toggleTaskCompleted = async event => {
-    const taskId = event.target.attributes['data-id'].value;
-    const parentNode = document.querySelector(`li[data-id="${taskId}"]`);
+/**
+ * Toggle marking task as completed.
+ * Fetches data to BE to store.
+ * @param {String} taskId 
+ */
+const toggleTaskCompleted = async taskId => {
+    const { listElement } = getTaskElements(taskId);
     
-    parentNode.classList.toggle('completed');
+    listElement.classList.toggle('completed');
 
     const data = getTaskDetails(taskId);
     await fetchData(data, 'PUT', '/');
 
+    // reload counter after changes
     countItemsLeft();
 }
 
+/**
+ * Selects all tasks on list as completed.
+ * If all are already marked as completed, unmark them all.
+ * @param {*} event 
+ */
 const toggleSelection = async event => {
     const allTasks = [ ...document.querySelectorAll('li[data-id]') ];
 
@@ -81,48 +128,58 @@ const toggleSelection = async event => {
             checkCompleted(task, false);
         }
     } else {
-        // if only some are marked as completeted, filter out these which are not and check them
+        // if only some (or none) tasks are marked as completeted, filter out these which are not and check them
         for (task of allTasks.filter(isNotCompleted)) {
             checkCompleted(task, true);
         }
     }
 }
 
-const editTaskDescription = async event => {
-    const targetNode = event.target;
-    const taskId = targetNode.attributes['data-id'].value;
-    const inputNode = document.querySelector(`input[data-id="${taskId}"].edit`);
-    const parentNode = document.querySelector(`li[data-id="${taskId}"]`);
+/**
+ * Edits task description, and fetches data to BE to store.
+ * @param {String} taskId 
+ */
+const editTaskDescription = async taskId => {
+    const { listElement, descriptionLabel, editInput } = getTaskElements(taskId);
 
-    parentNode.classList.add('editing');
-    inputNode.value = targetNode.innerText;
+    listElement.classList.add('editing');
+    editInput.value = descriptionLabel.innerText;
 
-    inputNode.addEventListener('keypress', async event => {
+    editInput.addEventListener('keypress', async event => {
         if (event.key === 'Enter') {
-            targetNode.innerText = inputNode.value;
-            parentNode.classList.remove('editing');
+            descriptionLabel.innerText = editInput.value;
+            listElement.classList.remove('editing');
 
-            if (inputNode.value !== '') {
+            if (editInput.value !== '') {
                 const data = getTaskDetails(taskId);
                 await fetchData(data, 'PUT', '/');
-                inputNode.value = '';   // empty value attribute to avoid fetch every time Enter is pressed
+                editInput.value = '';   // empty value attribute to avoid fetch every time Enter is pressed
             }
         }
     }); 
 }
 
-const deleteTask = async event => {
-    const taskId = event.target.attributes['data-id'].value;
-    const parentNode = document.querySelector(`li[data-id="${taskId}"]`);
+/**
+ * Removes task from list and fetches changes to BE to store.
+ * If deletion on BE side ends with success, will remove item from page.
+ * @param {String} taskId 
+ */
+const deleteTask = async taskId => {
+    const { listElement } = getTaskElements(taskId);
 
     const data = getTaskDetails(taskId);
     const res = await fetchData(data, 'DELETE', '/');
     const result = await res.json();
     if (result.deleted) {
-        parentNode.remove();
+        listElement.remove();
+        countItemsLeft();
     }
 }
 
+/**
+ * Clears out from list all tasks marked as completed.
+ * @param {*} event 
+ */
 const deleteSelectedTasks = async event => {
     const isCompleted = task => task.classList.contains('completed');
 
@@ -135,14 +192,29 @@ const deleteSelectedTasks = async event => {
         });
 }
 
-
+// Event listeners for updating tasks list
 inputNewTask.addEventListener('keypress', addNewTask);
-checkboxes.forEach(checkbox => checkbox.addEventListener('click', toggleTaskCompleted));
-descriptionLabels.forEach(label => label.addEventListener('click', editTaskDescription));
-delButtons.forEach(btn => btn.addEventListener('click', deleteTask));
 
+checkboxes.forEach(checkbox => checkbox.addEventListener('click', async event => {
+    const taskId = event.target.attributes['data-id'].value;
+    await toggleTaskCompleted(taskId);
+}));
+
+descriptionLabels.forEach(label => label.addEventListener('click', async event => {
+    const taskId = event.target.attributes['data-id'].value;
+    await editTaskDescription(taskId);
+}));
+
+delButtons.forEach(btn => btn.addEventListener('click', async event => {
+    const taskId = event.target.attributes['data-id'].value;
+    await deleteTask(taskId);
+}));
+
+// Event listener for marking/unmarking all tasks as completed
 selectAll.addEventListener('click', toggleSelection);
 
+// Event listener to clear from list all completed tasks
 clearButton.addEventListener('click', deleteSelectedTasks);
 
+// initialize items counter
 countItemsLeft();
