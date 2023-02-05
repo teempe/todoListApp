@@ -44,7 +44,7 @@ const addNewTask = async event => {
                 description: inputNewTask.value,
             }
             inputNewTask.value = '';    // empty value attribute to avoid fetch every time Enter is pressed
-            await fetchData(data, 'POST', '/#');
+            await fetchData(data, 'POST', '/');
             window.location.reload();   // reload view to get current list of tasks from BE
         }
     }
